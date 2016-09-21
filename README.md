@@ -1,7 +1,6 @@
 # datanerd
 Data Science Projects
 
-<!DOCTYPE html>
 <html>
 <body>
 
