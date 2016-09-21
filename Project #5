@@ -1,0 +1,174 @@
+# Lists in R
+
+# Deliverable: a list with the following components
+# Character: Machine Name
+# Vector: (min,mean,max) utilization for the month, excl. unknowns
+# Logical: Has utilization ever fallen below 90 percent TRUE/FALSE
+# Vector: all hours where utilization is unknown
+# Dataframe: for this machine
+# Plot: for all machines
+
+
+getwd()
+util <- read.csv("Machine-Utilization.csv")
+head(util, 12)
+str(util)
+summary(util)
+
+# Derive utilization column
+
+util$Utilization <- 1 - util$Percent.Idle
+head(util, 10)
+
+# Handling Date-Times in R
+
+tail(util)
+?POSIXct
+util$PosixTime <- as.POSIXct(util$Timestamp,format="%d/%m/%Y %H:%M")
+head(util, 10)
+summary(util)
+
+#TIP How to rearrange columns in a dataframe
+
+util$Timestamp <- NULL
+head(util, 12)
+util <- util[c(4,1,2,3)] # to rearrange the rows (e.g. posixtime is first)
+head(util)
+
+# What is a List?
+
+summary(util)
+RL1 <- util[util$Machine=="RL1",]
+summary(RL1)
+RL1$Machine <- factor(RL1$Machine) # to remove the other machines
+summary(RL1)
+
+
+# Construct list
+# Character: Machine Name
+# Vector: (min,mean,max) utilization for the month, excl. unknowns
+# Logical: Has utilization ever fallen below 90 percent true or false
+
+util_stats_RL1 <- c(min(RL1$Utilization, na.rm=TRUE),
+                    mean(RL1$Utilization, na.rm=TRUE),
+                    max(RL1$Utilization, na.rm=TRUE))
+
+util_stats_RL1
+which(RL1$Utilization < 0.90) #which() ignores na, yield indeces (e.g 31,32)
+util_under_90 <- length(which(RL1$Utilization < 0.90)) > 0 #27 times utilization fell below 90 percent
+util_under_90
+
+#RL1 character, machine name
+
+list_rl1 <- list("RL1", util_stats_RL1, util_under_90)
+list_rl1
+
+names(list_rl1) # checking names
+names(list_rl1) <- c("Machine","Stats","Low Threshold")
+(list_rl1)
+
+# Another way
+
+rm(list_rl1)
+list_rl1
+
+list_rl1 <- list(Machine ="RL1",Stats = util_stats_RL1, LowThreshold = util_under_90)
+list_rl1
+
+# Extracting components lists (3 ways)
+
+# 1 [] # always returns a list
+
+list_rl1[1]
+
+# 2 [[]] # always returns object within component
+
+list_rl1[[1]]
+
+# 3 $ same as [[]] but prettier
+
+list_rl1$Machine
+
+list_rl1[2]
+list_rl1[[2]]
+list_rl1[[2:3]] # or list_rl1$Stats[3] or list_rl1[[2]][3]
+typeof(list_rl1[2])
+typeof(list_rl1[[2]])
+list_rl1$Stats
+typeof(list_rl1$Stats)
+
+list_rl1[3]
+list_rl1[[3]]
+list_rl1$LowThreshold
+
+# Adding and Deleting List Components 
+
+list_rl1
+
+list_rl1[4] <- "New Information"
+
+list_rl1
+
+# 2 Way 
+# Vector: all hours where utilization is unknown
+
+list_rl1$UnknownHours <- RL1[is.na(RL1$Utilization), "PosixTime"]
+list_rl1
+
+# Removing a component
+
+list_rl1[4] <- NULL
+list_rl1
+
+list_rl1[4]
+#!!Notice that the numeration has shifted
+
+# Add another component, DataFrame for this machine
+
+list_rl1$Data <- RL1
+list_rl1
+summary(list_rl1)
+
+# Subsetting a List
+
+list_rl1$UnknownHours[1]
+list_rl1[[4]][1]
+
+list_rl1[1]
+list_rl1[1:2]
+list_rl1[c(1,4)]
+sublist_rl1 <- list_rl1[c("Machine","Stats")]
+sublist_rl1
+sublist_rl1[[2]][2]
+sublist_rl1$Stats[2]
+
+# Double square brackets are for accessing an element, not subsetting
+#list_rl1[[1:3]] results in ERROR because you can only enter one value
+
+# Buiilding a TimeSeries Plot
+
+library(ggplot2)
+
+p <- ggplot(data=util)
+
+myplot <- p + geom_line(aes(x=PosixTime, y=Utilization,
+              color=Machine), size=1.2) +
+  facet_grid(Machine~.) +
+  geom_hline(yintercept = 0.90,
+             color="Grey", size=1.2,
+             linetype=3)
+?linetype
+
+list_rl1$Plot <- myplot
+list_rl1 # runs all the date incluing the plot
+summary(list_rl1)
+str(list_rl1)
+
+
+
+
+
+
+
+
+
